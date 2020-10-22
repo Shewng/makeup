@@ -12,9 +12,8 @@ struct CameraView: View {
     
     @State private var isShowingImagePicker = false
     @State private var showCamera = false
-    
-    @State private var sourceType: UIImagePickerController.SourceType = .camera
-    
+    @State private var condition = 1
+
     @State private var bareFaceImage = UIImage()
 
     
@@ -33,7 +32,7 @@ struct CameraView: View {
                     
                     Button(action: {
                         self.isShowingImagePicker.toggle()
-                        self.sourceType = .photoLibrary
+                        self.condition = 1
                         print("Upload was tapped")
                         
                     }) {
@@ -43,12 +42,12 @@ struct CameraView: View {
                     }
                         
                     .sheet(isPresented: $isShowingImagePicker, content: {
-                        ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$bareFaceImage)
+                        ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$bareFaceImage, flag: self.$condition)
                     })
                     
                     Button(action: {
                         print("Camera Was Tapped")
-                        self.sourceType = .camera
+                        self.condition = 2
                         self.showCamera.toggle()
                     }) {
                         Image(systemName: "camera.circle")
@@ -56,7 +55,7 @@ struct CameraView: View {
                             .foregroundColor(.gray)
                     }
                     .sheet(isPresented: $showCamera, content: {
-                        ImagePickerView(isPresented: self.$showCamera, selectedImage: self.$bareFaceImage)
+                        ImagePickerView(isPresented: self.$showCamera, selectedImage: self.$bareFaceImage, flag: self.$condition)
                     })
 
             }
@@ -68,17 +67,26 @@ struct ImagePickerView: UIViewControllerRepresentable {
     
     
     
-    @Binding private var isPresented: Bool
-    @Binding private var selectedImage: UIImage
-    @State private var sourceType: UIImagePickerController.SourceType = .camera
+    @Binding var isPresented: Bool
+    @Binding var selectedImage: UIImage
+    @Binding var flag: Int
     
+    var sourceType1: UIImagePickerController.SourceType = .photoLibrary
+    var sourceType2: UIImagePickerController.SourceType = .camera
     
     func makeUIViewController(context:
         UIViewControllerRepresentableContext<ImagePickerView>) ->
         UIViewController {
         
+            
         let controller = UIImagePickerController()
-        controller.sourceType = sourceType
+            if(flag == 1){
+                controller.sourceType = sourceType1
+            }
+            else{
+                controller.sourceType = sourceType2
+                
+            }
         controller.delegate = context.coordinator
         return controller
     }
