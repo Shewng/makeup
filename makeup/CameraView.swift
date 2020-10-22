@@ -10,9 +10,13 @@ import SwiftUI
 
 struct CameraView: View {
     
-    @State var isShowingImagePicker = false
+    @State private var isShowingImagePicker = false
+    @State private var showCamera = false
     
-    @State var bareFaceImage = UIImage()
+    @State private var sourceType: UIImagePickerController.SourceType = .camera
+    
+    @State private var bareFaceImage = UIImage()
+
     
     var body: some View {
         VStack() {
@@ -23,11 +27,13 @@ struct CameraView: View {
                 .frame(width:250, height: 250)
                 .border(Color.black, width: 1)
                 .clipped()
+                .padding()
             
                 HStack(spacing: 40) {
                     
                     Button(action: {
                         self.isShowingImagePicker.toggle()
+                        self.sourceType = .photoLibrary
                         print("Upload was tapped")
                         
                     }) {
@@ -42,12 +48,17 @@ struct CameraView: View {
                     
                     Button(action: {
                         print("Camera Was Tapped")
+                        self.sourceType = .camera
+                        self.showCamera.toggle()
                     }) {
                         Image(systemName: "camera.circle")
                             .font(.system(size: 40.0))
                             .foregroundColor(.gray)
-                        
                     }
+                    .sheet(isPresented: $showCamera, content: {
+                        ImagePickerView(isPresented: self.$showCamera, selectedImage: self.$bareFaceImage)
+                    })
+
             }
         }
     }
@@ -55,14 +66,19 @@ struct CameraView: View {
 
 struct ImagePickerView: UIViewControllerRepresentable {
     
-    @Binding var isPresented: Bool
-    @Binding var selectedImage: UIImage
+    
+    
+    @Binding private var isPresented: Bool
+    @Binding private var selectedImage: UIImage
+    @State private var sourceType: UIImagePickerController.SourceType = .camera
+    
     
     func makeUIViewController(context:
         UIViewControllerRepresentableContext<ImagePickerView>) ->
         UIViewController {
         
         let controller = UIImagePickerController()
+        controller.sourceType = sourceType
         controller.delegate = context.coordinator
         return controller
     }

@@ -107,11 +107,11 @@
 				716429F2254102A00010F0E3 /* SceneDelegate.swift */,
 				716429F4254102A00010F0E3 /* ContentView.swift */,
 				FF26D6222541163200526438 /* CameraView.swift */,
+				FF26D6242541169700526438 /* InspoView.swift */,
 				716429F6254102A40010F0E3 /* Assets.xcassets */,
 				716429FB254102A40010F0E3 /* LaunchScreen.storyboard */,
 				716429FE254102A50010F0E3 /* Info.plist */,
 				716429F8254102A40010F0E3 /* Preview Content */,
-				FF26D6242541169700526438 /* InspoView.swift */,
 			);
 			path = makeup;
 			sourceTree = "<group>";
@@ -444,14 +444,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"makeup/Preview Content\"";
-				DEVELOPMENT_TEAM = F8555HP8H5;
+				DEVELOPMENT_TEAM = UT8M7S5JHJ;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = makeup/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = tester.makeup;
+				PRODUCT_BUNDLE_IDENTIFIER = tester1.makeup;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -464,14 +464,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"makeup/Preview Content\"";
-				DEVELOPMENT_TEAM = F8555HP8H5;
+				DEVELOPMENT_TEAM = UT8M7S5JHJ;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = makeup/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = tester.makeup;
+				PRODUCT_BUNDLE_IDENTIFIER = tester1.makeup;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
