@@ -17,6 +17,7 @@
 		71642A13254102A50010F0E3 /* makeupUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71642A12254102A50010F0E3 /* makeupUITests.swift */; };
 		FF26D6232541163200526438 /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF26D6222541163200526438 /* CameraView.swift */; };
 		FF26D6252541169700526438 /* InspoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF26D6242541169700526438 /* InspoView.swift */; };
+		FF89ED012544FE06003B7DD1 /* ScrollingStackModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF89ED002544FE06003B7DD1 /* ScrollingStackModifier.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +54,7 @@
 		71642A14254102A50010F0E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FF26D6222541163200526438 /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
 		FF26D6242541169700526438 /* InspoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspoView.swift; sourceTree = "<group>"; };
+		FF89ED002544FE06003B7DD1 /* ScrollingStackModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollingStackModifier.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,6 +110,7 @@
 				716429F4254102A00010F0E3 /* ContentView.swift */,
 				FF26D6222541163200526438 /* CameraView.swift */,
 				FF26D6242541169700526438 /* InspoView.swift */,
+				FF89ED002544FE06003B7DD1 /* ScrollingStackModifier.swift */,
 				716429F6254102A40010F0E3 /* Assets.xcassets */,
 				716429FB254102A40010F0E3 /* LaunchScreen.storyboard */,
 				716429FE254102A50010F0E3 /* Info.plist */,
@@ -276,6 +279,7 @@
 				FF26D6252541169700526438 /* InspoView.swift in Sources */,
 				716429F1254102A00010F0E3 /* AppDelegate.swift in Sources */,
 				716429F3254102A00010F0E3 /* SceneDelegate.swift in Sources */,
+				FF89ED012544FE06003B7DD1 /* ScrollingStackModifier.swift in Sources */,
 				716429F5254102A00010F0E3 /* ContentView.swift in Sources */,
 				FF26D6232541163200526438 /* CameraView.swift in Sources */,
 			);
