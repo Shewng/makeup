@@ -69,15 +69,20 @@ struct ScrollingHStackModifier: ViewModifier {
                     if index.remainder(dividingBy: 1) > 0.5 {
                         index += 1
                         print("If Swiped to", index)
-                        
                     } else {
                         index = CGFloat(Int(index))
-                        frameIndex = abs(Int(index) - 1)
+                        let frameIndex = abs(Int(index))
+                        
+                        var tempFrame = Array(0...frameLength-1)
+                        tempFrame.reverse()
+                        
+                        //find index in tempFrame and return that index
+                        imageIndex = tempFrame.firstIndex(of: frameIndex) ?? 0
+                        
+                        print(imageIndex)
                         
                         
                         
-                        
-                        print(frameIndex)
                         if(index == 0){
                             //steps.append("Video")
                             
@@ -93,13 +98,14 @@ struct ScrollingHStackModifier: ViewModifier {
                     // Set final offset (snapping to item)
                     let newOffset = index * self.itemWidth + (index - 1) * self.itemSpacing - (contentWidth / 2.0) + (screenWidth / 2.0) - ((screenWidth - self.itemWidth) / 2.0) + self.itemSpacing
                     
+                    
                     // Animate snapping
                     withAnimation {
                         self.scrollOffset = newOffset
                     }
                     
                 })
-            )
+        )
     }
 }
 

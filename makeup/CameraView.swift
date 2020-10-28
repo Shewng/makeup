@@ -10,8 +10,8 @@ import SwiftUI
 
 
 var steps: [String] = ["Picture", "Video"]
-var frameIndex = 0;
-
+var imageIndex = 0;
+var frameLength = 2;
 //helper to print for debugging
 //https://stackoverflow.com/questions/56517813/how-to-print-to-xcode-console-in-swiftui
 extension View {
@@ -28,15 +28,18 @@ struct CameraView: View {
     @State private var isShowingImagePicker = false
     @State private var showCamera = false
     @State var condition = 1
-    
     @State private var bareFaceImage = UIImage()
     
     var colors: [Color] = [.blue, .green, .red, .orange]
+    
+    
+    
     
     func addFrame() {
         let id = model.frames.count + 1
         let image = UIImage()
         model.frames.append(Frame(id: id, name: "Frame\(id)", image: image))
+        frameLength = model.frames.count
     }
        
     
@@ -58,7 +61,6 @@ struct CameraView: View {
              */
             
             HStack(alignment: .center, spacing: 30) {
-                
                 Print(type(of: model.frames))
             
                 ForEach(model.frames, id: \.self) { x in
@@ -95,7 +97,8 @@ struct CameraView: View {
                 
                 //need to add a index to see which photo to upload to
                 .sheet(isPresented: $isShowingImagePicker, content: {
-                    ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$model.frames[frameIndex].image, flag: self.$condition)
+                    
+                    ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition)
                 })
                 
                 Button(action: {
@@ -117,7 +120,7 @@ struct CameraView: View {
                     
                     
                 }) {
-                    Image(systemName: "pencil.tip.crop.circle.badge.plus")
+                    Image(systemName: "chevron.right.circle")
                         .font(.system(size: 40.0))
                         .foregroundColor(.gray)
                 }
