@@ -23,41 +23,41 @@ extension View {
 
 struct TextView: UIViewRepresentable {
     @Binding var text: String
-
+    
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
-
+    
     func makeUIView(context: Context) -> UITextView {
-
+        
         let myTextView = UITextView()
         myTextView.delegate = context.coordinator
-
+        
         myTextView.font = UIFont(name: "HelveticaNeue", size: 15)
         myTextView.isScrollEnabled = true
         myTextView.isEditable = true
         myTextView.isUserInteractionEnabled = true
         myTextView.backgroundColor = UIColor(white: 0.0, alpha: 0.10)
-
+        
         return myTextView
     }
-
+    
     func updateUIView(_ uiView: UITextView, context: Context) {
         uiView.text = text
     }
-
+    
     class Coordinator : NSObject, UITextViewDelegate {
-
+        
         var parent: TextView
-
+        
         init(_ uiTextView: TextView) {
             self.parent = uiTextView
         }
-
+        
         func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
             return true
         }
-
+        
         func textViewDidChange(_ textView: UITextView) {
             print("text now: \(String(describing: textView.text!))")
             self.parent.text = textView.text
@@ -78,7 +78,7 @@ struct CameraView: View {
     @State var isDisabled = false
     
     @State var name = ""
-        
+    
     //var screenWidth: CGFloat = 0
     //var screenHeight: CGFloat = 0
     var colors: [Color] = [.blue, .green, .red, .orange]
@@ -94,131 +94,125 @@ struct CameraView: View {
     func useProxy(_ proxy: GeometryProxy) -> some View {
         
         var screenWidth: CGFloat = 0
-        let screenHeight: CGFloat = proxy.size.height / 2
+        let screenHeight: CGFloat = 150
         
         if (self.model.frames.count == 1) {
             screenWidth = proxy.size.width * 0.89
         } else {
-            screenWidth = proxy.size.width / CGFloat(self.model.frames.count)
+            screenWidth = proxy.size.width * 0.89// / CGFloat(self.model.frames.count)
         }
-
+        
         return VStack(alignment: .leading) {
             Text("Description")
                 .font(.callout).bold()
             TextView(text: self.$name)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
-                .frame(width: screenWidth, height: 200)
-                
-                //.frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+                .frame(width: screenWidth, height: screenHeight)
+            
+            //.frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
         }
     }
     
     var body: some View {
-        
-        ScrollView(.vertical) {
-            VStack(alignment: .leading) {
-                
-                GeometryReader { geometry in
-                    //self.useProxy(geometry)
-                //}
-                    VStack(alignment: .leading) {
-                        Text("Description")
-                            .font(.callout).bold()
-                        TextView(text: self.$name)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(minWidth: (geometry.size.width / CGFloat(self.model.frames.count)), maxWidth: geometry.size.width / CGFloat(self.model.frames.count), minHeight: geometry.size.height / 2, alignment: .topLeading)
-                            .fixedSize()
-                                .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
-                    }
-                }
+        GeometryReader { geometry in
             
-                
-                Text("Insert Post pictures")
-                // frames
-                HStack(alignment: .center, spacing: 30) {
-                    Print(type(of: model.frames))
-                
-                    ForEach(model.frames, id: \.self) { x in
-                        //make a class that has a description box, frame and other things
-                        Image(uiImage: x.image)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width:270, height: 300)
-                            .border(Color.black, width: 1)
-                            .clipped()
-                            .padding();
+            ScrollView(.vertical) {
+                VStack(alignment: .center) {
+                    
+                    // Description box
+                    self.useProxy(geometry)
+                    
+                    Text("Insert Post pictures")
+                    
+                    // START OF FRAMES
+                    HStack(alignment: .center, spacing: 30) {
+                        self.Print(type(of: self.model.frames))
+                        
+                        ForEach(self.model.frames, id: \.self) { x in
+                            //make a class that has a description box, frame and other things
+                            Image(uiImage: x.image)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width:270, height: 300)
+                                .border(Color.black, width: 1)
+                                .clipped()
+                                .padding();
+                            
+                        }
+                        
+                        self.Print(self.model.frames[0].name)
                         
                     }
+                    .frame(maxWidth: .infinity)
+                    .modifier(ScrollingHStackModifier(items: self.model.frames.count, itemWidth: 270, itemSpacing: 60))
+                    // END OF FRAMES
                     
-                    self.Print(model.frames[0].name)
-                    
-                }
-                .frame(maxWidth: .infinity)
-                .modifier(ScrollingHStackModifier(items: model.frames.count, itemWidth: 270, itemSpacing: 60))
-            
-            
-                HStack(spacing: 40) {
-                    
-                    Button(action: {
-                        self.isShowingImagePicker.toggle()
-                        self.condition = 1
-                        print("Upload was tapped")
+                    // START OF BUTTONS
+                    HStack(spacing: 40) {
                         
-                    }) {
-                        Image(systemName: "plus.circle")
-                            .font(.system(size: 40.0))
-                            .foregroundColor(.gray)
-                    }
-                    
-                    //need to add a index to see which photo to upload to
-                    .sheet(isPresented: $isShowingImagePicker, content: {
+                        Button(action: {
+                            self.isShowingImagePicker.toggle()
+                            self.condition = 1
+                            print("Upload was tapped")
+                            
+                        }) {
+                            Image(systemName: "plus.circle")
+                                .font(.system(size: 40.0))
+                                .foregroundColor(.gray)
+                        }
+                            
+                            //need to add a index to see which photo to upload to
+                            .sheet(isPresented: self.$isShowingImagePicker, content: {
+                                
+                                ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition)
+                            })
                         
-                        ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition)
-                    })
-                    
-                    Button(action: {
-                        print("Camera Was Tapped")
-                        self.condition = 2
-                        self.showCamera.toggle()
-                    }) {
-                        Image(systemName: "camera.circle")
-                            .font(.system(size: 40.0))
-                            .foregroundColor(.gray)
-                    }
-                    .disabled(isDisabled)
-                    .sheet(isPresented: $showCamera, content: {
-                        ImagePickerView(isPresented: self.$showCamera, selectedImage: self.$bareFaceImage, flag: self.$condition)
-                    })
-                    
-                    
-                    Button(action: {
-                        print("Video camera Was Tapped")
-                        self.condition = 3
-                        self.showVideoCam.toggle()
-                    }) {
-                        Image(systemName: "video.circle")
-                            .font(.system(size: 40.0))
-                            .foregroundColor(.gray)
-                    }
-                    .disabled(isDisabled)
-                    .sheet(isPresented: $showVideoCam, content: {
-                        ImagePickerView(isPresented: self.$showVideoCam, selectedImage: self.$bareFaceImage, flag: self.$condition)
-                    })
-                    
-                    
-                    Button(action: {
-                        print("Add was tapped")
-                        self.addFrame()
+                        Button(action: {
+                            print("Camera Was Tapped")
+                            self.condition = 2
+                            self.showCamera.toggle()
+                        }) {
+                            Image(systemName: "camera.circle")
+                                .font(.system(size: 40.0))
+                                .foregroundColor(.gray)
+                        }
+                        .disabled(self.isDisabled)
+                        .sheet(isPresented: self.$showCamera, content: {
+                            ImagePickerView(isPresented: self.$showCamera, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition)
+                        })
                         
                         
-                    }) {
-                        Image(systemName: "chevron.right.circle")
-                            .font(.system(size: 40.0))
-                            .foregroundColor(.gray)
+                        Button(action: {
+                            print("Video camera Was Tapped")
+                            self.condition = 3
+                            self.showVideoCam.toggle()
+                        }) {
+                            Image(systemName: "video.circle")
+                                .font(.system(size: 40.0))
+                                .foregroundColor(.gray)
+                        }
+                        .disabled(self.isDisabled)
+                        .sheet(isPresented: self.$showVideoCam, content: {
+                            ImagePickerView(isPresented: self.$showVideoCam, selectedImage: self.$bareFaceImage, flag: self.$condition)
+                        })
+                        
+                        
+                        Button(action: {
+                            print("Add was tapped")
+                            self.addFrame()
+                            
+                            
+                        }) {
+                            Image(systemName: "chevron.right.circle")
+                                .font(.system(size: 40.0))
+                                .foregroundColor(.gray)
+                        }
                     }
+                    //END OF BUTTONS
                     
-                }
-            }.frame(maxWidth: .infinity)
+                    Spacer().frame(height: 50)
+                }.frame(maxWidth: .infinity)
+            }
         }
         
     }
@@ -226,8 +220,6 @@ struct CameraView: View {
 }
 
 struct ImagePickerView: UIViewControllerRepresentable {
-    
-    
     
     @Binding var isPresented: Bool
     @Binding var selectedImage: UIImage
