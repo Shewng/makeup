@@ -116,6 +116,8 @@ struct CameraView: View {
     var body: some View {
         GeometryReader { geometry in
             
+            
+            
             ScrollView(.vertical) {
                 VStack(alignment: .center) {
                     
