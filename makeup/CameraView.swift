@@ -5,6 +5,7 @@
 //  Created by William Zhou on 2020-10-21.
 //  Copyright © 2020 Shwong. All rights reserved.
 //
+// YOURE A AAAAAAAALKJNSDBOIUWEBNFOINWFGIN ERFJN DRGNLKXREGD
 
 import SwiftUI
 
@@ -116,7 +117,7 @@ struct CameraView: View {
     var body: some View {
         GeometryReader { geometry in
             
-            
+            NavigationView {
             
             ScrollView(.vertical) {
                 VStack(alignment: .center) {
@@ -178,7 +179,6 @@ struct CameraView: View {
                                 .font(.system(size: 40.0))
                                 .foregroundColor(.gray)
                         }
-                        .disabled(self.isDisabled)
                         .sheet(isPresented: self.$showCamera, content: {
                             ImagePickerView(isPresented: self.$showCamera, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition)
                         })
@@ -193,7 +193,6 @@ struct CameraView: View {
                                 .font(.system(size: 40.0))
                                 .foregroundColor(.gray)
                         }
-                        .disabled(self.isDisabled)
                         .sheet(isPresented: self.$showVideoCam, content: {
                             ImagePickerView(isPresented: self.$showVideoCam, selectedImage: self.$bareFaceImage, flag: self.$condition)
                         })
@@ -214,9 +213,9 @@ struct CameraView: View {
                     
                     Spacer().frame(height: 50)
                 }.frame(maxWidth: .infinity)
-            }
+            } // end of scroll view
+            } // end of nav ba
         }
-        
     }
     
 }
