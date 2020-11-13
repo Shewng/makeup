@@ -5,14 +5,16 @@
 //  Created by William Zhou on 2020-10-21.
 //  Copyright © 2020 Shwong. All rights reserved.
 //
-// YOURE A AAAAAAAALKJNSDBOIUWEBNFOINWFGIN ERFJN DRGNLKXREGD
 
 import SwiftUI
-
+import AVFoundation
+import AVKit
 
 var steps: [String] = ["Picture", "Video"]
 var imageIndex = 0;
 var frameLength = 2;
+var videos: [URL] = []
+
 //helper to print for debugging
 //https://stackoverflow.com/questions/56517813/how-to-print-to-xcode-console-in-swiftui
 extension View {
@@ -69,8 +71,8 @@ struct TextView: UIViewRepresentable {
 
 struct CameraView: View {
     
+    @ObservedObject var model = Model() // list of pictures/videos
     
-    @ObservedObject var model = Model()
     @State private var bareFaceImage = UIImage()
     @State private var isShowingImagePicker = false
     @State private var showCamera = false
@@ -80,10 +82,8 @@ struct CameraView: View {
     
     @State var name = ""
     
-    //var screenWidth: CGFloat = 0
-    //var screenHeight: CGFloat = 0
-    var colors: [Color] = [.blue, .green, .red, .orange]
-    
+    @Binding var tabSelection: Int
+
     
     func addFrame() {
         let id = model.frames.count + 1
@@ -100,7 +100,7 @@ struct CameraView: View {
         if (self.model.frames.count == 1) {
             screenWidth = proxy.size.width * 0.89
         } else {
-            screenWidth = proxy.size.width * 0.89// / CGFloat(self.model.frames.count)
+            screenWidth = proxy.size.width * 0.89
         }
         
         return VStack(alignment: .leading) {
@@ -109,8 +109,6 @@ struct CameraView: View {
             TextView(text: self.$name)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .frame(width: screenWidth, height: screenHeight)
-            
-            //.frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
         }
     }
     
@@ -119,102 +117,140 @@ struct CameraView: View {
             
             NavigationView {
             
-            ScrollView(.vertical) {
-                VStack(alignment: .center) {
-                    
-                    // Description box
-                    self.useProxy(geometry)
-                    
-                    Text("Insert Post pictures")
-                    
-                    // START OF FRAMES
-                    HStack(alignment: .center, spacing: 30) {
-                        self.Print(type(of: self.model.frames))
+                ScrollView(.vertical) {
+                    VStack(alignment: .center) {
                         
-                        ForEach(self.model.frames, id: \.self) { x in
-                            //make a class that has a description box, frame and other things
-                            Image(uiImage: x.image)
-                                .resizable()
+                        Spacer()
+                        
+                        // Description box
+                        self.useProxy(geometry)
+                        
+                        Text("Insert Post pictures")
+                        
+                        // START OF FRAMES
+                        HStack(alignment: .center, spacing: 30) {
+                            self.Print(type(of: self.model.frames))
+                            
+                            ForEach(self.model.frames, id: \.self) { x in
+                                //make a class that has a description box, frame and other things
+                                Image(uiImage: x.image)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width:270, height: 300)
+                                    .border(Color.black, width: 1)
+                                    .clipped()
+                                    .padding();
+                                
+                            }
+                            
+                            ForEach(videos, id: \.self) { vid in
+                                //make a class that has a description box, frame and other things
+                                player(setURL: vid)
                                 .scaledToFill()
                                 .frame(width:270, height: 300)
                                 .border(Color.black, width: 1)
                                 .clipped()
                                 .padding();
-                            
+                            }
+                                                        
                         }
+                        .modifier(ScrollingHStackModifier(items: self.model.frames.count, itemWidth: 270, itemSpacing: 60))
+                        // END OF FRAMES
                         
-                        self.Print(self.model.frames[0].name)
-                        
-                    }
-                    .frame(maxWidth: .infinity)
-                    .modifier(ScrollingHStackModifier(items: self.model.frames.count, itemWidth: 270, itemSpacing: 60))
-                    // END OF FRAMES
-                    
-                    // START OF BUTTONS
-                    HStack(spacing: 40) {
-                        
-                        Button(action: {
-                            self.isShowingImagePicker.toggle()
-                            self.condition = 1
-                            print("Upload was tapped")
+                        // START OF BUTTONS
+                        HStack(spacing: 40) {
                             
-                        }) {
-                            Image(systemName: "plus.circle")
-                                .font(.system(size: 40.0))
-                                .foregroundColor(.gray)
-                        }
-                            
-                            //need to add a index to see which photo to upload to
-                            .sheet(isPresented: self.$isShowingImagePicker, content: {
+                            Button(action: {
+                                self.isShowingImagePicker.toggle()
+                                self.condition = 1
+                                print("Upload was tapped")
                                 
-                                ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition)
+                            }) {
+                                Image(systemName: "plus.circle")
+                                    .font(.system(size: 40.0))
+                                    .foregroundColor(.gray)
+                            }
+                                
+                                //need to add a index to see which photo to upload to
+                                .sheet(isPresented: self.$isShowingImagePicker, content: {
+                                    
+                                    ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition)
+                                })
+                            
+                            Button(action: {
+                                print("Camera Was Tapped")
+                                self.condition = 2
+                                self.showCamera.toggle()
+                            }) {
+                                Image(systemName: "camera.circle")
+                                    .font(.system(size: 40.0))
+                                    .foregroundColor(.gray)
+                            }
+                            .sheet(isPresented: self.$showCamera, content: {
+                                ImagePickerView(isPresented: self.$showCamera, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition)
                             })
-                        
-                        Button(action: {
-                            print("Camera Was Tapped")
-                            self.condition = 2
-                            self.showCamera.toggle()
-                        }) {
-                            Image(systemName: "camera.circle")
-                                .font(.system(size: 40.0))
-                                .foregroundColor(.gray)
-                        }
-                        .sheet(isPresented: self.$showCamera, content: {
-                            ImagePickerView(isPresented: self.$showCamera, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition)
-                        })
-                        
-                        
-                        Button(action: {
-                            print("Video camera Was Tapped")
-                            self.condition = 3
-                            self.showVideoCam.toggle()
-                        }) {
-                            Image(systemName: "video.circle")
-                                .font(.system(size: 40.0))
-                                .foregroundColor(.gray)
-                        }
-                        .sheet(isPresented: self.$showVideoCam, content: {
-                            ImagePickerView(isPresented: self.$showVideoCam, selectedImage: self.$bareFaceImage, flag: self.$condition)
-                        })
-                        
-                        
-                        Button(action: {
-                            print("Add was tapped")
-                            self.addFrame()
                             
                             
-                        }) {
-                            Image(systemName: "chevron.right.circle")
-                                .font(.system(size: 40.0))
-                                .foregroundColor(.gray)
+                            Button(action: {
+                                print("Video camera Was Tapped")
+                                self.condition = 3
+                                self.showVideoCam.toggle()
+                            }) {
+                                Image(systemName: "video.circle")
+                                    .font(.system(size: 40.0))
+                                    .foregroundColor(.gray)
+                            }
+                            .sheet(isPresented: self.$showVideoCam, content: {
+                                ImagePickerView(isPresented: self.$showVideoCam, selectedImage: self.$bareFaceImage, flag: self.$condition)
+                            })
+                            
+                            
+                            Button(action: {
+                                print("Add was tapped")
+                                self.addFrame()
+                                
+                                
+                            }) {
+                                Image(systemName: "chevron.right.circle")
+                                    .font(.system(size: 40.0))
+                                    .foregroundColor(.gray)
+                            }
                         }
-                    }
-                    //END OF BUTTONS
-                    
-                    Spacer().frame(height: 50)
-                }.frame(maxWidth: .infinity)
-            } // end of scroll view
-            } // end of nav ba
+                        //END OF BUTTONS
+                        Spacer()
+                        self.useProxy(geometry)
+                        Spacer()
+                        
+                    }.frame(maxWidth: .infinity)
+                } // end of scroll view
+                
+                //VStack {s
+                //    NavigationLink(destination: InspoView()) {
+                //        Text("hello world");
+                //    }
+                //    NavigationLink(destination: InspoView()) {
+                //        Text("YOYOYOYOOYOY");
+                //    }
+                //    NavigationLink(destination: InspoView()) {
+                //        Text("TESTING THIS NOW!");
+                //    }
+                //
+                //}
+                .navigationBarTitle("Add new post", displayMode: .inline)
+                .navigationBarItems(
+                    trailing:
+                        HStack {
+                            Button(action: {
+                                self.tabSelection = 1
+                            }) {
+                                Text("Finish")
+                            }
+                            //NavigationLink(destination: InspoView(tabSelection: //self.$tabSelection)) {
+                            //    Text("GAAAAAAAAAAA");
+                            //}
+                        }
+                )
+            } // end of nav bar
         }
     }
     
@@ -241,7 +277,7 @@ struct ImagePickerView: UIViewControllerRepresentable {
                 controller.sourceType = sourceType2
             }
             else {
-                controller.sourceType = sourceType2
+                //controller.sourceType = sourceType2
                 controller.mediaTypes = ["public.movie"]
             }
             controller.delegate = context.coordinator
@@ -264,6 +300,10 @@ struct ImagePickerView: UIViewControllerRepresentable {
                 print(selectedImageFromPicker)
                 self.parent.selectedImage = selectedImageFromPicker
             }
+            if let videoURL = info[.mediaURL] as? URL {
+                videos.append(videoURL)
+                print(videos)
+            }
             
             self.parent.isPresented = false
         }
@@ -274,24 +314,41 @@ struct ImagePickerView: UIViewControllerRepresentable {
     }
 }
 
-struct DummyView: UIViewRepresentable {
-    
-    func makeUIView(context: UIViewRepresentableContext<DummyView>) -> UIButton {
-        let button = UIButton()
-        button.setTitle("DUMMY", for: .normal)
-        button.backgroundColor = .white
-        return button
+//struct DummyView: UIViewRepresentable {
+//    akeUIView(context: UIViewRepresentableContext<DummyView>) -> UIButton {
+//        let button = UIButton()
+//    func m
+//        button.setTitle("DUMMY", for: .normal)
+//        button.backgroundColor = .white
+//        return button
+//    }
+//
+//    func updateUIView(_ uiView: DummyView.UIViewType, context: UIViewRepresentableContext<DummyView>) {
+//    }
+//}
+
+struct player : UIViewControllerRepresentable, Hashable {
+
+    var setURL:URL
+
+    func makeUIViewController(context: UIViewControllerRepresentableContext<player>) -> AVPlayerViewController {
+
+        print("URL ", setURL)
+        let controller = AVPlayerViewController()
+        //let url = "http://techslides.com/demos/sample-videos/small.mp4"
+        //let url = "file:///private/var/mobile/Containers/Data/PluginKitPlugin/B18C1A50-84A3-4FBC-8582-E2A92047DB9F/tmp/trim.800AAE71-C7E4-43C9-B6E2-0B15EA01BF5E.MOV"
+        //let player1 = AVPlayer(url: URL(string: url)!)
+
+        let player1 = AVPlayer(url: setURL)
+        controller.player = player1
+        return controller
     }
-    
-    func updateUIView(_ uiView: DummyView.UIViewType, context: UIViewRepresentableContext<DummyView>) {
+
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: UIViewControllerRepresentableContext<player>) {
+
     }
 }
 
-struct CameraView_Previews: PreviewProvider {
-    static var previews: some View {
-        CameraView()
-    }
-}
 
 class Frame: NSObject {
     var id: Int
@@ -316,5 +373,20 @@ class Model: ObservableObject {
             //Frame(id: 2, name: "Frame2", image: b2),
         ]
     }
-    
 }
+
+
+struct CameraView_Previews: PreviewProvider {
+    static var previews: some View {
+        CamPreviewWrapper();
+    }
+}
+
+struct CamPreviewWrapper: View {
+    @State(initialValue: 1) var code: Int
+
+    var body: some View {
+        CameraView(tabSelection: $code)
+    }
+}
+

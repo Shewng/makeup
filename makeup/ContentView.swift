@@ -9,19 +9,23 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var tabSelection: Int = 1
+    
     var body: some View {
-        TabView{
-            InspoView()
+        TabView(selection: $tabSelection) {
+            InspoView(tabSelection: $tabSelection)
                 .tabItem {
                     Image(systemName: "person.3")
                     Text("Inspo")
                 }
-            CameraView()
+            .tag(1)
+            CameraView(tabSelection: $tabSelection)
                 .tabItem {
                     Image(systemName: "plus.square")
                     Text("Camera")
                 }
-        }
+            .tag(2)
+        }.accentColor(.red)
     }
 }
 
