@@ -71,7 +71,10 @@ struct TextView: UIViewRepresentable {
 
 struct CameraView: View {
     
+    
     @ObservedObject var model = Model() // list of pictures/videos
+    
+    @State private var stateVideos: [URL] = []
     
     @State private var bareFaceImage = UIImage()
     @State private var isShowingImagePicker = false
@@ -83,6 +86,7 @@ struct CameraView: View {
     @State var name = ""
     
     @Binding var tabSelection: Int
+    @Binding var postArray: [Post]
 
     
     func addFrame() {
@@ -140,10 +144,9 @@ struct CameraView: View {
                                     .border(Color.black, width: 1)
                                     .clipped()
                                     .padding();
-                                
                             }
                             
-                            ForEach(videos, id: \.self) { vid in
+                            ForEach(self.stateVideos, id: \.self) { vid in
                                 //make a class that has a description box, frame and other things
                                 player(setURL: vid)
                                 .scaledToFill()
@@ -174,7 +177,7 @@ struct CameraView: View {
                                 //need to add a index to see which photo to upload to
                                 .sheet(isPresented: self.$isShowingImagePicker, content: {
                                     
-                                    ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition)
+                                    ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition, stateVideos: self.$stateVideos)
                                 })
                             
                             Button(action: {
@@ -187,7 +190,7 @@ struct CameraView: View {
                                     .foregroundColor(.gray)
                             }
                             .sheet(isPresented: self.$showCamera, content: {
-                                ImagePickerView(isPresented: self.$showCamera, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition)
+                                ImagePickerView(isPresented: self.$showCamera, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition, stateVideos: self.$stateVideos)
                             })
                             
                             
@@ -201,7 +204,7 @@ struct CameraView: View {
                                     .foregroundColor(.gray)
                             }
                             .sheet(isPresented: self.$showVideoCam, content: {
-                                ImagePickerView(isPresented: self.$showVideoCam, selectedImage: self.$bareFaceImage, flag: self.$condition)
+                                ImagePickerView(isPresented: self.$showVideoCam, selectedImage: self.$bareFaceImage, flag: self.$condition, stateVideos: self.$stateVideos)
                             })
                             
                             
@@ -223,37 +226,34 @@ struct CameraView: View {
                         
                     }.frame(maxWidth: .infinity)
                 } // end of scroll view
-                
-                //VStack {s
-                //    NavigationLink(destination: InspoView()) {
-                //        Text("hello world");
-                //    }
-                //    NavigationLink(destination: InspoView()) {
-                //        Text("YOYOYOYOOYOY");
-                //    }
-                //    NavigationLink(destination: InspoView()) {
-                //        Text("TESTING THIS NOW!");
-                //    }
-                //
-                //}
+
                 .navigationBarTitle("Add new post", displayMode: .inline)
                 .navigationBarItems(
                     trailing:
                         HStack {
                             Button(action: {
+                                //collect all pictures/videos/descriptions and send to InspoView
                                 self.tabSelection = 1
+                                
+                                //let post = Post1(pictures: <#[UIImage]#>, instructions: <#[String]#>, //description: <#String#>)
+                                //
+                                self.createPost(pic: self.model.frames[0].image)
+                                
                             }) {
                                 Text("Finish")
                             }
-                            //NavigationLink(destination: InspoView(tabSelection: //self.$tabSelection)) {
-                            //    Text("GAAAAAAAAAAA");
-                            //}
                         }
                 )
             } // end of nav bar
         }
     }
     
+    func createPost(pic: UIImage) {
+        // create new post
+        let newPost: Post = .init(id: postArray.count, firstPic: pic, lastPic: pic, instructions: ["Hello"], title: "testing", desc: "if this works im goated. seriously")
+        // append to existing array of posts
+        self.postArray.append(newPost)
+    }
 }
 
 struct ImagePickerView: UIViewControllerRepresentable {
@@ -261,6 +261,7 @@ struct ImagePickerView: UIViewControllerRepresentable {
     @Binding var isPresented: Bool
     @Binding var selectedImage: UIImage
     @Binding var flag: Int
+    @Binding var stateVideos: [URL]
     
     var sourceType1: UIImagePickerController.SourceType = .savedPhotosAlbum
     var sourceType2: UIImagePickerController.SourceType = .camera
@@ -302,6 +303,7 @@ struct ImagePickerView: UIViewControllerRepresentable {
             }
             if let videoURL = info[.mediaURL] as? URL {
                 videos.append(videoURL)
+                parent.stateVideos.append(videoURL)
                 print(videos)
             }
             
@@ -314,31 +316,14 @@ struct ImagePickerView: UIViewControllerRepresentable {
     }
 }
 
-//struct DummyView: UIViewRepresentable {
-//    akeUIView(context: UIViewRepresentableContext<DummyView>) -> UIButton {
-//        let button = UIButton()
-//    func m
-//        button.setTitle("DUMMY", for: .normal)
-//        button.backgroundColor = .white
-//        return button
-//    }
-//
-//    func updateUIView(_ uiView: DummyView.UIViewType, context: UIViewRepresentableContext<DummyView>) {
-//    }
-//}
-
 struct player : UIViewControllerRepresentable, Hashable {
 
     var setURL:URL
 
     func makeUIViewController(context: UIViewControllerRepresentableContext<player>) -> AVPlayerViewController {
 
-        print("URL ", setURL)
         let controller = AVPlayerViewController()
-        //let url = "http://techslides.com/demos/sample-videos/small.mp4"
-        //let url = "file:///private/var/mobile/Containers/Data/PluginKitPlugin/B18C1A50-84A3-4FBC-8582-E2A92047DB9F/tmp/trim.800AAE71-C7E4-43C9-B6E2-0B15EA01BF5E.MOV"
-        //let player1 = AVPlayer(url: URL(string: url)!)
-
+        
         let player1 = AVPlayer(url: setURL)
         controller.player = player1
         return controller
