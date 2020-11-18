@@ -79,6 +79,8 @@ struct CameraView: View {
     @State private var showVideoCam = false
     @State private var condition = 1
     @State private var isDisabled = false
+    @State private var alert = false
+    @State private var backgroundOffset: CGFloat = 0
     
     @State private var postTitle = ""
     @State private var postDesc = ""
@@ -91,7 +93,13 @@ struct CameraView: View {
         let image = UIImage()
         model.frames.append(Frame(id: id, name: "Frame\(id)", image: image))
         frameLength = model.frames.count
+        print("After URL ", self.stateVideos)
     }
+    
+    func addVid(b:URL){
+        stateVideos.append(b)
+    }
+    
     
     func useProxy(_ proxy: GeometryProxy) -> some View {
         
@@ -118,11 +126,13 @@ struct CameraView: View {
         }
     }
     
+    
+    
     var body: some View {
         GeometryReader { geometry in
             
             NavigationView {
-            
+                
                 ScrollView(.vertical) {
                     VStack(alignment: .center) {
                         
@@ -131,7 +141,7 @@ struct CameraView: View {
                         // Description box
                         self.useProxy(geometry)
                         
-                        
+                                                
                         // START OF FRAMES
                         HStack(alignment: .center, spacing: 30) {
                             self.Print(type(of: self.model.frames))
@@ -167,8 +177,8 @@ struct CameraView: View {
                             
                         }
                         .modifier(ScrollingHStackModifier(items: self.stateVideos.count + 2, itemWidth: 270, itemSpacing: 60, currentStep: self.$currentStep))
-                        // END OF FRAMES
                         
+                        // END OF FRAMES
                         HStack {
                             Text("Step " + String(self.currentStep))
                         }.padding(.bottom, 15)
@@ -186,12 +196,13 @@ struct CameraView: View {
                                     .font(.system(size: 40.0))
                                     .foregroundColor(.gray)
                             }
+                            
                             //need to add a index to see which photo to upload to
                             .sheet(isPresented: self.$isShowingImagePicker, content: {
                                 
                                 ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$bareFaceImage, selectedImageFinal: self.$bareFaceImageFinal, flag: self.$condition, stateVideos: self.$stateVideos)
                             })
-                            
+                                                        
                             Button(action: {
                                 print("Camera Was Tapped")
                                 self.condition = 2
@@ -210,6 +221,7 @@ struct CameraView: View {
                                 print("Video camera Was Tapped")
                                 self.condition = 3
                                 self.showVideoCam.toggle()
+                                self.alert.toggle()
                             }) {
                                 Image(systemName: "video.circle")
                                     .font(.system(size: 40.0))
@@ -218,18 +230,16 @@ struct CameraView: View {
                             .sheet(isPresented: self.$showVideoCam, content: {
                                 ImagePickerView(isPresented: self.$showVideoCam, selectedImage: self.$bareFaceImage, selectedImageFinal: self.$bareFaceImageFinal, flag: self.$condition, stateVideos: self.$stateVideos)
                             })
-                            
-                            
-                            Button(action: {
-                                print("Add was tapped")
-                                self.addFrame()
-                                
-                                
-                            }) {
-                                Image(systemName: "chevron.right.circle")
-                                    .font(.system(size: 40.0))
-                                    .foregroundColor(.gray)
-                            }
+         
+                            //Button(action: {
+                            //    print("Add was tapped")
+                            //    print("State", stateVideos)
+                            //    self.addFrame()
+                            //}) {
+                            //    Image(systemName: "chevron.right.circle")
+                            //        .font(.system(size: 40.0))
+                            //        .foregroundColor(.gray)
+                            //}
                         }
                         //END OF BUTTONS
                         Spacer()
@@ -268,6 +278,8 @@ struct CameraView: View {
     }
 }
 
+
+
 struct ImagePickerView: UIViewControllerRepresentable {
     
     @Binding var isPresented: Bool
@@ -279,24 +291,22 @@ struct ImagePickerView: UIViewControllerRepresentable {
     var sourceType1: UIImagePickerController.SourceType = .savedPhotosAlbum
     var sourceType2: UIImagePickerController.SourceType = .camera
     
-    func makeUIViewController(context:
-        UIViewControllerRepresentableContext<ImagePickerView>) ->
-        UIViewController {
+    func makeUIViewController(context:UIViewControllerRepresentableContext<ImagePickerView>) -> UIViewController {
             
-            
-            let controller = UIImagePickerController()
-            if (flag == 1) {
-                controller.sourceType = sourceType1
-            }
-            if (flag == 2) {
-                controller.sourceType = sourceType2
-            }
-            if (flag == 3) {
-                controller.mediaTypes = ["public.movie"]
-            }
-            controller.delegate = context.coordinator
-            return controller
+        let controller = UIImagePickerController()
+        if (flag == 1) {
+            controller.sourceType = sourceType1
+        }
+        if (flag == 2) {
+            controller.sourceType = sourceType2
+        }
+        if (flag == 3) {
+            controller.mediaTypes = ["public.movie"]
+        }
+        controller.delegate = context.coordinator
+        return controller
     }
+
     
     func makeCoordinator() -> ImagePickerView.Coordinator {
         return Coordinator(parent: self)
@@ -304,18 +314,25 @@ struct ImagePickerView: UIViewControllerRepresentable {
     
     class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
         
+        
         let parent: ImagePickerView
         init(parent: ImagePickerView) {
             self.parent = parent
         }
         
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            
+            print("ImageIndex" , imageIndex)
+            //need to find index of frame
+            //if index is 0 we set the first frame's image
             if (imageIndex == 0) {
                 if let selectedImageFromPicker = info[.originalImage] as? UIImage {
                     self.parent.selectedImage = selectedImageFromPicker
                 }
             }
-            if (imageIndex == frameLength - 1) {
+            
+            //if on last frame
+            if (imageIndex == (frameLength - 1)) {
                 if let selectedImageFromPicker = info[.originalImage] as? UIImage {
                     self.parent.selectedImageFinal = selectedImageFromPicker
                 }
@@ -336,9 +353,9 @@ struct ImagePickerView: UIViewControllerRepresentable {
 }
 
 struct player : UIViewControllerRepresentable, Hashable {
-
+    
     var setURL:URL
-
+    
     func makeUIViewController(context: UIViewControllerRepresentableContext<player>) -> AVPlayerViewController {
 
         frameLength += 1
@@ -348,10 +365,11 @@ struct player : UIViewControllerRepresentable, Hashable {
         let player1 = AVPlayer(url: setURL)
         controller.player = player1
         return controller
+        
     }
-
+    
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: UIViewControllerRepresentableContext<player>) {
-
+        
     }
 }
 
@@ -382,6 +400,7 @@ class Model: ObservableObject {
 }
 
 
+
 struct CameraView_Previews: PreviewProvider {
     static var previews: some View {
         CamPreviewWrapper()
@@ -391,7 +410,7 @@ struct CameraView_Previews: PreviewProvider {
 struct CamPreviewWrapper: View {
     @State(initialValue: 1) var code: Int
     @State(initialValue: []) var postArray: [Post]
-
+    
     var body: some View {
         CameraView(tabSelection: $code, postArray: $postArray)
     }
