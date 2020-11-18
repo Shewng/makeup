@@ -82,8 +82,9 @@ struct ScrollingHStackModifier: ViewModifier {
                         //find index in tempFrame and return that index
                         imageIndex = tempFrame.firstIndex(of: frameIndex) ?? 0
                         
+                        //step indicator
                         self.currentStep = imageIndex
-
+                        
                     }
                     
                     // Protect from scrolling out of bounds
