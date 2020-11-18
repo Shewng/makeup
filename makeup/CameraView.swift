@@ -17,12 +17,7 @@ var videos: [URL] = []
 
 //helper to print for debugging
 //https://stackoverflow.com/questions/56517813/how-to-print-to-xcode-console-in-swiftui
-extension View {
-    func Print(_ vars: Any...) -> some View {
-        for v in vars { print(v) }
-        return EmptyView()
-    }
-}
+
 
 struct TextView: UIViewRepresentable {
     @Binding var text: String
@@ -71,23 +66,25 @@ struct TextView: UIViewRepresentable {
 
 struct CameraView: View {
     
-    
     @ObservedObject var model = Model() // list of pictures/videos
     
     @State private var stateVideos: [URL] = []
+    @State private var currentStep: Int = 0
     
+    @State private var bareFaceImageFinal = UIImage()
     @State private var bareFaceImage = UIImage()
+    
     @State private var isShowingImagePicker = false
     @State private var showCamera = false
     @State private var showVideoCam = false
-    @State var condition = 1
-    @State var isDisabled = false
+    @State private var condition = 1
+    @State private var isDisabled = false
     
-    @State var name = ""
+    @State private var postTitle = ""
+    @State private var postDesc = ""
     
     @Binding var tabSelection: Int
     @Binding var postArray: [Post]
-
     
     func addFrame() {
         let id = model.frames.count + 1
@@ -99,7 +96,8 @@ struct CameraView: View {
     func useProxy(_ proxy: GeometryProxy) -> some View {
         
         var screenWidth: CGFloat = 0
-        let screenHeight: CGFloat = 150
+        let height1: CGFloat = 50
+        let height2: CGFloat = 150
         
         if (self.model.frames.count == 1) {
             screenWidth = proxy.size.width * 0.89
@@ -108,11 +106,15 @@ struct CameraView: View {
         }
         
         return VStack(alignment: .leading) {
+            Text("Title")
+            .font(.callout).bold()
+            TextView(text: self.$postTitle)
+                .frame(width: screenWidth, height: height1)
+            
             Text("Description")
                 .font(.callout).bold()
-            TextView(text: self.$name)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .frame(width: screenWidth, height: screenHeight)
+            TextView(text: self.$postDesc)
+                .frame(width: screenWidth, height: height2)
         }
     }
     
@@ -129,23 +131,21 @@ struct CameraView: View {
                         // Description box
                         self.useProxy(geometry)
                         
-                        Text("Insert Post pictures")
                         
                         // START OF FRAMES
                         HStack(alignment: .center, spacing: 30) {
                             self.Print(type(of: self.model.frames))
                             
-                            ForEach(self.model.frames, id: \.self) { x in
-                                //make a class that has a description box, frame and other things
-                                Image(uiImage: x.image)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width:270, height: 300)
-                                    .border(Color.black, width: 1)
-                                    .clipped()
-                                    .padding();
-                            }
+                            //first image
+                            Image(uiImage: self.bareFaceImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width:270, height: 300)
+                            .border(Color.black, width: 1)
+                            .clipped()
+                            .padding();
                             
+                            //array of videos
                             ForEach(self.stateVideos, id: \.self) { vid in
                                 //make a class that has a description box, frame and other things
                                 player(setURL: vid)
@@ -155,10 +155,23 @@ struct CameraView: View {
                                 .clipped()
                                 .padding();
                             }
-                                                        
+                            
+                            //last image
+                            Image(uiImage: self.bareFaceImageFinal)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width:270, height: 300)
+                            .border(Color.black, width: 1)
+                            .clipped()
+                            .padding();
+                            
                         }
-                        .modifier(ScrollingHStackModifier(items: self.model.frames.count, itemWidth: 270, itemSpacing: 60))
+                        .modifier(ScrollingHStackModifier(items: self.stateVideos.count + 2, itemWidth: 270, itemSpacing: 60, currentStep: self.$currentStep))
                         // END OF FRAMES
+                        
+                        HStack {
+                            Text("Step " + String(self.currentStep))
+                        }.padding(.bottom, 15)
                         
                         // START OF BUTTONS
                         HStack(spacing: 40) {
@@ -173,12 +186,11 @@ struct CameraView: View {
                                     .font(.system(size: 40.0))
                                     .foregroundColor(.gray)
                             }
+                            //need to add a index to see which photo to upload to
+                            .sheet(isPresented: self.$isShowingImagePicker, content: {
                                 
-                                //need to add a index to see which photo to upload to
-                                .sheet(isPresented: self.$isShowingImagePicker, content: {
-                                    
-                                    ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition, stateVideos: self.$stateVideos)
-                                })
+                                ImagePickerView(isPresented: self.$isShowingImagePicker, selectedImage: self.$bareFaceImage, selectedImageFinal: self.$bareFaceImageFinal, flag: self.$condition, stateVideos: self.$stateVideos)
+                            })
                             
                             Button(action: {
                                 print("Camera Was Tapped")
@@ -190,7 +202,7 @@ struct CameraView: View {
                                     .foregroundColor(.gray)
                             }
                             .sheet(isPresented: self.$showCamera, content: {
-                                ImagePickerView(isPresented: self.$showCamera, selectedImage: self.$model.frames[imageIndex].image, flag: self.$condition, stateVideos: self.$stateVideos)
+                                ImagePickerView(isPresented: self.$showCamera, selectedImage: self.$bareFaceImage, selectedImageFinal: self.$bareFaceImageFinal, flag: self.$condition, stateVideos: self.$stateVideos)
                             })
                             
                             
@@ -204,7 +216,7 @@ struct CameraView: View {
                                     .foregroundColor(.gray)
                             }
                             .sheet(isPresented: self.$showVideoCam, content: {
-                                ImagePickerView(isPresented: self.$showVideoCam, selectedImage: self.$bareFaceImage, flag: self.$condition, stateVideos: self.$stateVideos)
+                                ImagePickerView(isPresented: self.$showVideoCam, selectedImage: self.$bareFaceImage, selectedImageFinal: self.$bareFaceImageFinal, flag: self.$condition, stateVideos: self.$stateVideos)
                             })
                             
                             
@@ -221,8 +233,7 @@ struct CameraView: View {
                         }
                         //END OF BUTTONS
                         Spacer()
-                        self.useProxy(geometry)
-                        Spacer()
+
                         
                     }.frame(maxWidth: .infinity)
                 } // end of scroll view
@@ -235,9 +246,8 @@ struct CameraView: View {
                                 //collect all pictures/videos/descriptions and send to InspoView
                                 self.tabSelection = 1
                                 
-                                //let post = Post1(pictures: <#[UIImage]#>, instructions: <#[String]#>, //description: <#String#>)
-                                //
-                                self.createPost(pic: self.model.frames[0].image)
+                                //self.createPost(arr: $postArray)
+                                self.createPost(firstPic: self.bareFaceImage, lastPic: self.bareFaceImageFinal, videos: self.stateVideos, title: self.postTitle, desc: self.postDesc)
                                 
                             }) {
                                 Text("Finish")
@@ -248,11 +258,13 @@ struct CameraView: View {
         }
     }
     
-    func createPost(pic: UIImage) {
+    func createPost(firstPic: UIImage, lastPic: UIImage, videos: [URL], title: String, desc: String) {
         // create new post
-        let newPost: Post = .init(id: postArray.count, firstPic: pic, lastPic: pic, instructions: ["Hello"], title: "testing", desc: "if this works im goated. seriously")
+        let newPost: Post = .init(id: postArray.count, firstPic: firstPic, lastPic: lastPic, videos: videos, title: title, desc: desc)
+        
         // append to existing array of posts
         self.postArray.append(newPost)
+        
     }
 }
 
@@ -260,6 +272,7 @@ struct ImagePickerView: UIViewControllerRepresentable {
     
     @Binding var isPresented: Bool
     @Binding var selectedImage: UIImage
+    @Binding var selectedImageFinal: UIImage
     @Binding var flag: Int
     @Binding var stateVideos: [URL]
     
@@ -274,11 +287,11 @@ struct ImagePickerView: UIViewControllerRepresentable {
             let controller = UIImagePickerController()
             if (flag == 1) {
                 controller.sourceType = sourceType1
-            } else if (flag == 2) {
+            }
+            if (flag == 2) {
                 controller.sourceType = sourceType2
             }
-            else {
-                //controller.sourceType = sourceType2
+            if (flag == 3) {
                 controller.mediaTypes = ["public.movie"]
             }
             controller.delegate = context.coordinator
@@ -297,14 +310,20 @@ struct ImagePickerView: UIViewControllerRepresentable {
         }
         
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let selectedImageFromPicker = info[.originalImage] as? UIImage {
-                print(selectedImageFromPicker)
-                self.parent.selectedImage = selectedImageFromPicker
+            if (imageIndex == 0) {
+                if let selectedImageFromPicker = info[.originalImage] as? UIImage {
+                    self.parent.selectedImage = selectedImageFromPicker
+                }
             }
+            if (imageIndex == frameLength - 1) {
+                if let selectedImageFromPicker = info[.originalImage] as? UIImage {
+                    self.parent.selectedImageFinal = selectedImageFromPicker
+                }
+            }
+            
             if let videoURL = info[.mediaURL] as? URL {
                 videos.append(videoURL)
-                parent.stateVideos.append(videoURL)
-                print(videos)
+                self.parent.stateVideos.append(videoURL)
             }
             
             self.parent.isPresented = false
@@ -322,7 +341,9 @@ struct player : UIViewControllerRepresentable, Hashable {
 
     func makeUIViewController(context: UIViewControllerRepresentableContext<player>) -> AVPlayerViewController {
 
+        frameLength += 1
         let controller = AVPlayerViewController()
+        controller.videoGravity = .resizeAspectFill
         
         let player1 = AVPlayer(url: setURL)
         controller.player = player1
@@ -363,15 +384,16 @@ class Model: ObservableObject {
 
 struct CameraView_Previews: PreviewProvider {
     static var previews: some View {
-        CamPreviewWrapper();
+        CamPreviewWrapper()
     }
 }
 
 struct CamPreviewWrapper: View {
     @State(initialValue: 1) var code: Int
+    @State(initialValue: []) var postArray: [Post]
 
     var body: some View {
-        CameraView(tabSelection: $code)
+        CameraView(tabSelection: $code, postArray: $postArray)
     }
 }
 

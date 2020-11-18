@@ -21,14 +21,17 @@ struct ScrollingHStackModifier: ViewModifier {
     
     @State private var scrollOffset: CGFloat
     @State private var dragOffset: CGFloat
+    @Binding var currentStep: Int
     
     var items: Int
     var itemWidth: CGFloat
     var itemSpacing: CGFloat
-    init(items: Int, itemWidth: CGFloat, itemSpacing: CGFloat) {
+    
+    init(items: Int, itemWidth: CGFloat, itemSpacing: CGFloat, currentStep: Binding<Int>) {
         self.items = items
         self.itemWidth = itemWidth
         self.itemSpacing = itemSpacing
+        self._currentStep = currentStep
         
         // Calculate Total Content Width
         let contentWidth: CGFloat = CGFloat(items) * itemWidth + CGFloat(items - 1) * itemSpacing
@@ -79,16 +82,8 @@ struct ScrollingHStackModifier: ViewModifier {
                         //find index in tempFrame and return that index
                         imageIndex = tempFrame.firstIndex(of: frameIndex) ?? 0
                         
-                        print(imageIndex)
-                        
-                        
-                        
-                        if(index == 0){
-                            //steps.append("Video")
-                            
-                            
-                        }
-                        //print("Steps", steps)
+                        self.currentStep = imageIndex
+
                     }
                     
                     // Protect from scrolling out of bounds
